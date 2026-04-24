@@ -1045,4 +1045,90 @@ Do not animate `Transform.localScale` per-frame for visual effects — use a sha
 
 ## 9. Reference Direction
 
-[To be authored]
+*This section records five specific visual references used to sharpen distinct aspects of the game's DNA. These are not aesthetic targets — REQUIEM FORMATION does not attempt to look like any of them. Each reference is a precision instrument borrowed for one specific technique. When that technique has been absorbed, the reference should recede.*
+
+---
+
+### Reference 1 — *Radiant Silvergun* (Treasure, 1998) — Silhouette Sovereignty Under Visual Saturation
+
+**Domain**: Shape language / silhouette clarity
+
+**Technique to draw from**: Radiant Silvergun saturates the screen with multicolored bullet patterns and layered explosions — yet every sprite type remains unambiguously readable throughout. The discipline is not in reducing visual density; it is in designing silhouettes so geometrically distinct that the eye classifies them before the conscious mind engages. Specifically: enemy types are wide, squat, or horizontal — none share a profile with the player ship, which is narrow and vertical. Profile-axis contrast (horizontal threat vs. vertical player) is the core readability mechanism, not color differentiation.
+
+**What to avoid**: Do not import the color language. Radiant Silvergun uses warm primaries (red, yellow, bronze) that conflict with REQUIEM FORMATION's semantic color grammar. Do not draw from the enemy designs (mech/industrial aesthetic has no place in this world). The reference is geometric strategy only.
+
+**Art bible application**: Reinforces Section 3's axis-contrast principle — player ship points up (agency); drone threats point down. The horizontal Weaver and rectangular Fortress are direct applications of this profile-contrast rule. When VFX artists propose effects that obscure the play field, this reference is the argument for restraint.
+
+*Pillar anchor: 모던 레트로 / 흐름 속의 깊이*
+
+---
+
+### Reference 2 — *Hyper Light Drifter* (Heart Machine, 2016) — Particle-as-Memory, Not Particle-as-Spectacle
+
+**Domain**: VFX philosophy / particle behavior
+
+**Technique to draw from**: Hyper Light Drifter uses particles that read as physical matter, not light emissions — sparks travel on arced ballistic paths, dust hangs and disperses, hit impacts scatter like struck gravel. Each particle event feels like something *happened* in the world, not something being *displayed* to the player. Specifically: the death burst's particle spread encodes the direction the killing blow came from. Particles carry spatial information.
+
+**What to avoid**: Do not import the warm palette or organic texture work (desaturated earth tones — rust, amber, dusty green — are incompatible with the deep-space cool palette). Do not study ground-plane lighting (a different geometric context).
+
+**Art bible application**: Governs VFX on the sacrifice bloom and echo dissolution. When a pilot is sacrificed, the Red bloom should expand with directed ballistic geometry — not an omnidirectional soft glow. When an echo dissolves at Stage 7, its particle scatter should trail in the direction of last movement. Particles are the narrative of what happened.
+
+*Pillar anchor: 잔상이 이야기다 / 희생은 선택이다*
+
+---
+
+### Reference 3 — *Nier: Automata* (PlatinumGames, 2017) — Restraint as the Color Decision
+
+**Domain**: Color and atmospheric mood / palette discipline under emotional load
+
+**Technique to draw from**: Nier: Automata maintains a severely restricted palette — ash-grey, blown-out white, corroded steel — for almost the entire game. This is a deliberate accumulation of color debt. When color finally appears (in story cutscenes, UI transitions), it lands with emotional force impossible in a normally-colorful game. Specifically: the game's UI leans into monochrome-with-single-accent, and the single accent (mild amber-gold of pod dialogue text) carries enormous semantic weight because nothing else competes with it.
+
+**What to avoid**: Do not import the grey-white desaturated battlefield aesthetic (REQUIEM FORMATION's deep space is atmospheric black, not industrial grey). Do not study the character design pipeline (3D-rendered, entirely different production context).
+
+**Art bible application**: This is the argument for the six deep-space neutral supporting colors. The three semantic colors (Gold, Red, Blue-White) only carry weight because the other 95% of the screen is restrained. Any saturation added to the environment is color debt drawn against the semantic grammar. Section 4's palette discipline is Nier's color-debt strategy applied to a shmup.
+
+*Pillar anchor: 희생은 선택이다*
+
+---
+
+### Reference 4 — *Maquia: When the Promised Flower Blooms* (P.A. Works, 2018) — Cel-Shaded Character That Breathes in a Pixel World
+
+**Domain**: Illustration character design / the dual-mode bridge
+
+**Technique to draw from**: Maquia uses a cel-shading approach in which the key light is always cooler than the fill light — the character's face is simultaneously lit from a cool primary source and a warm secondary source. The technique creates depth from two colors (cool key, warm fill) rather than rendering complexity. Critically: the character's signature design elements (hair color, eyes, silhouette of clothing) remain identifiable in distant shots and dark scenes. The character is never lost.
+
+**What to avoid**: Do not attempt to import animation curves or motion philosophy (portraits are static variants, not animated sequences). Do not reference Maquia's warm-pastel color design for the pilot's palette (warm flesh tones and golden light conflict with the cool palette anchor).
+
+**Art bible application**: Directly governs Section 5.2's portrait lighting. The warm-cool split in Section 2.5 (cool key ~6500K royal blue, warm fill ~3200K violet-rose) is this reference translated into the game's palette. The rule that the pilot's four identity markers must remain readable when reduced to ~32×48 pixels is this reference's silhouette-retention principle.
+
+*Pillar anchor: 잔상이 이야기다 (illustration as narrative threshold)*
+
+---
+
+### Reference 5 — *Fez* (Polytron, 2012) — Pixel Typography as a First-Class Design Object
+
+**Domain**: Typographic and UI design
+
+**Technique to draw from**: Fez treats its custom script and in-game typography as designed pixel objects, not functional readouts. Each character cell is a pixel-art composition — weight, counter, and stroke are all designed at the character level. The result is that the game's text has the same visual density and grid-alignment as its sprites; text does not feel imported from a different production context. Specifically: monospaced character width makes multi-line readouts spatially stable (no line-length shift as values change).
+
+**What to avoid**: Do not reference Fez's custom undecipherable alphabet — the game requires readable Latin/Hangul text. Do not import the puzzle-game semantic context (Fez uses typography as gameplay mystery; REQUIEM FORMATION uses it as an information channel).
+
+**Art bible application**: Justifies and clarifies Section 7.2's pixel type specification. The requirement for a 7px cap height at 1×, grid-perfect 8×8 character cell, and zero-width differentiation between `0` and `O` are applications of this discipline — every numeric glyph is a designed object with the same grid compliance as the game's sprites. When a programmer asks "can we just use any monospaced font?" — this reference explains why the answer is no.
+
+*Pillar anchor: 모던 레트로 (retro constraint as design method, not decoration)*
+
+---
+
+### Reference Coverage Summary
+
+| Reference | Domain | Core Technique | Art Bible Sections |
+|---|---|---|---|
+| Radiant Silvergun | Silhouette / shape legibility | Profile-axis contrast under visual saturation | 3, 3.1, 3.5 |
+| Hyper Light Drifter | VFX / particle behavior | Directional-ballistic particles as spatial event records | 2.4, 5.4 |
+| Nier: Automata | Color palette discipline | Color-debt accumulation — scarcity creates semantic impact | 4.1, 4.2, 4.3 |
+| Maquia (2018 film) | Illustration / portrait lighting | Cool key / warm fill; silhouette retention at scale | 2.5, 5.2 |
+| Fez | Typography / UI grid discipline | Type as grid-native pixel object, not font import | 7.2 |
+
+---
+
+*Note on Ikaruga, Hades, and Undertale*: These three titles informed the game's design foundation and are legible throughout the art bible — Ikaruga's absorption duality lives in the Chromatic Event Grammar; Hades' portrait-driven narrative integration lives in Sections 5.2 and 7.5; Undertale's sacrifice-weighted emotional pixel art lives in the Echo Degradation system and the Sacrifice Moment's white-flash treatment. They are not listed as formal references here because they are the conceptual DNA of the game itself, not instruments borrowed for specific techniques. Listing them as references risks making the game feel derivative; the five references above are the more precise tools.
