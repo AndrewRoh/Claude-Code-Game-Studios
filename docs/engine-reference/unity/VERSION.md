@@ -2,56 +2,63 @@
 
 | Field | Value |
 |-------|-------|
-| **Engine Version** | Unity 6.3 LTS |
-| **Release Date** | December 2025 |
-| **Project Pinned** | 2026-02-13 |
-| **Last Docs Verified** | 2026-02-13 |
-| **LLM Knowledge Cutoff** | May 2025 |
+| **Engine Version** | Unity 6.4 (6000.4.4f1) |
+| **Release Date** | March 2026 |
+| **Project Pinned** | 2026-04-24 |
+| **Last Docs Verified** | 2026-04-24 |
+| **LLM Knowledge Cutoff** | August 2025 |
 
 ## Knowledge Gap Warning
 
-The LLM's training data likely covers Unity up to ~2022 LTS (2022.3). The entire
-Unity 6 release series (formerly Unity 2023 Tech Stream) introduced significant
-changes that the model does NOT know about. Always cross-reference this directory
-before suggesting Unity API calls.
+**Risk Level: HIGH** — Unity 6.4 was released March 2026, after the LLM's training cutoff.
+Always cross-reference this directory before suggesting Unity API calls.
 
 ## Post-Cutoff Version Timeline
 
 | Version | Release | Risk Level | Key Theme |
 |---------|---------|------------|-----------|
-| 6.0 | Oct 2024 | HIGH | Unity 6 rebrand, new rendering features, Entities 1.3, DOTS improvements |
-| 6.1 | Nov 2024 | MEDIUM | Bug fixes, stability improvements |
-| 6.2 | Dec 2024 | MEDIUM | Performance optimizations, new input system improvements |
-| 6.3 LTS | Dec 2025 | HIGH | First LTS since 6.0, production-ready DOTS, enhanced graphics features |
+| Unity 6.0 (6000.0) | Oct 2024 | MEDIUM | Unity 6 launch: URP Render Graph, New Input System default |
+| Unity 6.1 (6000.1) | Early 2025 | MEDIUM | Stability + URP improvements |
+| Unity 6.2 (6000.2) | Mid 2025 | HIGH | Near LLM cutoff — verify APIs |
+| Unity 6.3 (6000.3) | Late 2025 | HIGH | Post-cutoff |
+| Unity 6.4 (6000.4) | Mar 2026 | HIGH | ECS as core package, DirectStorage, Project Auditor built-in |
 
-## Major Changes from 2022 LTS to Unity 6.3 LTS
+## Key Changes in Unity 6.4 (vs. LLM training data)
 
 ### Breaking Changes
-- **Entities/DOTS**: Major API overhaul in Entities 1.0+, complete redesign of ECS patterns
-- **Input System**: Legacy Input Manager deprecated, new Input System is default
-- **Rendering**: URP/HDRP significant upgrades, SRP Batcher improvements
-- **Addressables**: Asset management workflow changes
-- **Scripting**: C# 9 support, new API patterns
 
-### New Features (Post-Cutoff)
-- **DOTS**: Production-ready Entity Component System (Entities 1.3+)
-- **Graphics**: Enhanced URP/HDRP pipelines, GPU Resident Drawer
-- **Multiplayer**: Netcode for GameObjects improvements
-- **UI Toolkit**: Production-ready for runtime UI (replaces UGUI for new projects)
-- **Async Asset Loading**: Improved Addressables performance
-- **Web**: WebGPU support
+- **`RenderGraphSettings.enableRenderCompatibilityMode`** is now read-only (returns `false`). Projects must use URP Render Graph — Compatibility Mode is fully removed.
+- **`WeakObjectSceneReference.LoadAsync`** now returns the `Scene` instance directly (API signature changed).
+- **`RuntimeContentManager.UnloadScene`** signature changed — accepts only `Scene` instance, not path/handle.
+- **ECS Entities package**: `Entities.ForEach` marked obsolete. Use `IJobEntity` and `SystemAPI.Query` instead.
+- **ECS `IAspect`** marked obsolete. Use Component and EntityQuery APIs directly.
+- **`ComponentLookup.GetRefRWOptional()` / `GetRefROOptional()`** deprecated (internal use only).
+- **`EntityManager.CopyEntities()`** deprecated. Use `EntityManager.Instantiate()` instead.
 
-### Deprecated Systems
-- **Legacy Input Manager**: Use new Input System package
-- **Legacy Particle System**: Use Visual Effect Graph
-- **UGUI**: Still supported, but UI Toolkit recommended for new projects
-- **Old ECS (GameObjectEntity)**: Replaced by modern DOTS/Entities
+### New Features Relevant to REQUIEM FORMATION
+
+| Feature | Relevance |
+|---------|-----------|
+| ECS/Entities now a core Editor package (no separate install) | Bullet simulation at scale if DOTS adopted |
+| DirectStorage API (Windows Standalone) | Up to 40% faster load times for textures/meshes |
+| Project Auditor built into Editor | Free performance profiling — use it during development |
+| Improved 2D Renderer in URP | Better 2D lights, shadows, pixel art support |
+| Adaptive Performance on PS4/5 and Xbox Series | If console port planned in future |
+
+### Best Practices for Unity 6.4 (vs. older patterns the LLM may suggest)
+
+| Old pattern (LLM may suggest) | Correct Unity 6.4 pattern |
+|---|---|
+| `Entities.ForEach` | `IJobEntity` + `SystemAPI.Query` |
+| `IAspect` | Direct Component + EntityQuery APIs |
+| URP Compatibility Mode | URP Render Graph (only option now) |
+| `EntityManager.CopyEntities()` | `EntityManager.Instantiate()` |
+| Old Input System (`Input.GetAxis`) | New Input System (`InputAction`, `PlayerInput`) |
 
 ## Verified Sources
 
-- Official docs: https://docs.unity3d.com/6000.0/Documentation/Manual/index.html
-- Unity 6 release: https://unity.com/releases/unity-6
-- Unity 6.3 LTS announcement: https://unity.com/blog/unity-6-3-lts-is-now-available
-- Migration guide: https://docs.unity3d.com/6000.0/Documentation/Manual/upgrade-guides.html
-- Unity 6 support: https://unity.com/releases/unity-6/support
-- C# API reference: https://docs.unity3d.com/6000.0/Documentation/ScriptReference/index.html
+- Official docs: https://docs.unity3d.com/6000.4/Documentation/Manual/
+- What's New in 6.4: https://docs.unity3d.com/6000.4/Documentation/Manual/WhatsNewUnity64.html
+- Upgrade to 6.4 guide: https://docs.unity3d.com/6000.4/Documentation/Manual/UpgradeGuideUnity64.html
+- Breaking changes discussion: https://discussions.unity.com/t/planned-breaking-changes-in-unity-6-4/1682100
+- Entities 6.4.0 changelog: https://docs.unity3d.com/Packages/com.unity.entities@6.4/changelog/CHANGELOG.html
