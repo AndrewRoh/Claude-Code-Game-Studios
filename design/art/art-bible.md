@@ -861,7 +861,185 @@ Character: Constant velocity, no acceleration curve. Moves like a read-head, not
 
 ## 8. Asset Standards
 
-[To be authored]
+### 8.1 Production Pipeline
+
+**Source tool**: Aseprite (all pixel-art sprites and animations). Illustration portraits may use any vector/raster tool, but final exports must conform to the spec in 8.6.
+
+**Pipeline split**:
+- Source files (`.aseprite`, `.psd`, `.clip`) live in `assets/art/source/` — tracked in Git, never imported by Unity directly.
+- Unity imports exported PNGs from `assets/art/sprites/` (gameplay), `assets/art/backgrounds/`, `assets/art/ui/`, `assets/art/portraits/`.
+- When a source file is updated, the artist exports a new PNG to the correct import folder. Unity reimports automatically.
+
+This separation keeps Git diffs meaningful (source files show intent; PNG diffs show pixel output) and allows outsourcers to deliver final PNGs without requiring Aseprite access.
+
+---
+
+### 8.2 Naming Convention
+
+All art files use this format: `[category]_[object]_[state]_[nativeRes].png`
+
+| Segment | Values | Examples |
+|---|---|---|
+| category | `ship`, `enemy`, `bullet`, `echo`, `vfx`, `bg`, `ui`, `portrait` | `ship`, `enemy`, `bg` |
+| object | Object identity slug | `player`, `drone`, `weaver`, `fortress`, `nebula_wisp01` |
+| state | Animation state or variant | `idle`, `move`, `death`, `hit`, `confident`, `layer1` |
+| nativeRes | Native pixel dimension (square: single number; non-square: `WxH`) | `32`, `16`, `512`, `128x160` |
+
+**Examples:**
+- `ship_player_idle_32.png`
+- `enemy_drone_move_16.png`
+- `enemy_weaver_idle_24.png`
+- `bg_nebula_wisp01_512.png`
+- `portrait_pilot_confident_128x160.png`
+- `portrait_pilot_vulnerable_128x160.png`
+- `ui_echo_slot_active_8.png`
+- `vfx_sacrifice_bloom_32.png`
+
+Animation frames: append `_f[frame number]` before the extension if frames are individual files rather than a sprite sheet — e.g., `ship_player_idle_32_f01.png`, `ship_player_idle_32_f02.png`.
+
+**No version numbers in filenames.** Git provides versioning. `ship_player_idle_32_v2.png` is forbidden.
+
+---
+
+### 8.3 Texture Resolution Tiers
+
+**Five tiers. No intermediate sizes.**
+
+| Tier | Native Size | Contents |
+|---|---|---|
+| Micro | 16×16px | Drone enemy, small bullets/VFX |
+| Small | 24×24px | Weaver enemy |
+| Gameplay | 32×32px | Player ship, Fortress, most enemies, HUD icons, 32px VFX |
+| Cutscene | 64–96px height | Cutscene sprites — must be redrawn from 32px source, NOT downscaled from portrait |
+| Portrait | 128×160px | Illustrated pilot portrait variants |
+| Background tile | 512×512px | All parallax layer tiles |
+
+**The intermediate size rule**: A sprite authored at 48px because "it reads better" is a production error. The five tiers are the only valid sizes. If a sprite needs more detail at gameplay size, the solution is a better 32px design — not a new tier. Enforce this at source authoring, not at import.
+
+---
+
+### 8.4 Unity Import Settings
+
+All sprites must use the following settings. These are enforced via an `AssetPostprocessor` script at `src/Tools/Editor/PixelArtAssetPostprocessor.cs` (requires lead-programmer approval before implementation).
+
+| Setting | Required Value | Why |
+|---|---|---|
+| Texture Type | `Sprite (2D and UI)` | Enables sprite mode, PPU, atlas packing |
+| Filter Mode | **`Point (no filter)`** | Mandatory for pixel art — Bilinear/Trilinear blurs pixel edges |
+| Generate Mip Maps | **Disabled** | Mip maps waste 33% memory and cause blurry sprites at runtime |
+| Compression | **`RGBA 32 bit` (PC platform override)** | DXT/BC block compression introduces banding on a 9-color palette |
+| Pixels Per Unit (PPU) | **1** for all sprites | 1 texture pixel = 1 Unity world unit; display scaling handled at Camera/Canvas level |
+| Alpha Is Transparency | Enabled | Prevents color bleeding at transparent pixel edges |
+| Read/Write Enabled | **Disabled** (default) | Enable only where runtime pixel reads are explicitly required; doubles GPU memory |
+| sRGB | Enabled for color sprites; **Disabled** for nebula greyscale masks | Nebula patches are linear-space masks tinted at runtime — gamma correction would distort the tint |
+| Wrap Mode | `Clamp` for sprites and portraits; `Repeat` for background tiles | Clamp prevents edge bleeding in atlases; background tiles require Repeat for seamless scroll |
+| Max Size | See per-category limits in 8.5 | Prevents oversized source files from bloating build |
+
+**Blocking violations** (must be corrected before any build):
+- `Filter Mode: Bilinear` or `Trilinear` on any sprite
+- `Generate Mip Maps: Enabled` on any 2D sprite
+- Any lossy block compression (`DXT1`, `DXT5`, `BC7`, `ETC2`) on pixel-art sprites
+- `Read/Write Enabled` on sprites that do not require CPU pixel access
+- `Allow Rotation: Enabled` in Sprite Atlas V2 (rotated pixel-art samples incorrectly under Point filter)
+- `Pixels Per Unit` mismatched between sprite categories
+
+---
+
+### 8.5 Sprite Atlases and Memory Budgets
+
+**Atlas system**: Unity Sprite Atlas V2. Do not use the legacy Sprite Packer.
+
+**6 production atlases:**
+
+| Atlas | Contents | Max Size | Padding |
+|---|---|---|---|
+| `Gameplay_Ships` | Player ship + all enemy types | 512×512 | 2px |
+| `Gameplay_Bullets` | All bullet and projectile sprites | 512×512 | 2px |
+| `Gameplay_FX` | Explosion frames, hit sparks, VFX sprites | 512×512 | 4px |
+| `UI_HUD` | HUD icons, echo slot icons, life segments | 512×512 | 2px |
+| `UI_Menus` | Menu panels, button states, borders | 1024×1024 | 4px |
+| `Portraits` | All pilot portrait variants + cutscene sprites | 512×512 | 4px |
+
+**Background tiles are excluded from all atlases.** Tilemap tiles require `Wrap Mode: Repeat`, which is incompatible with atlas sub-rects. Background sprites live as direct texture references.
+
+**Sprite Atlas V2 settings**: Allow Rotation: Disabled. Tight Packing: Disabled. Include in Build: Enabled.
+
+**Texture memory budget** (~128MB allocation from 512MB total ceiling):
+
+| Category | Format | Per-unit | Count | Budget |
+|---|---|---|---|---|
+| Gameplay sprite atlases | RGBA32 | 1MB (512×512) | 3 | 3MB |
+| Background tiles | RGBA32 | 1MB (512×512) | 4 layers | 4MB |
+| Nebula library atlas | R8 (single-channel) | 0.25MB (512×512) | 1 atlas | 0.25MB |
+| UI atlases | RGBA32 | 1MB | 2 | 2MB |
+| Portrait atlas | RGBA32 | 1MB | 1 | 1MB |
+| Headroom | — | — | — | ~117MB |
+
+Run **Project Auditor** (`Window > Analysis > Project Auditor` — built into Unity 6.4) after every batch of new imports to audit texture memory usage.
+
+---
+
+### 8.6 Materials and Shaders
+
+| Sprite category | Required shader |
+|---|---|
+| Gameplay sprites receiving 2D Lights | `Universal Render Pipeline/2D/Sprite-Lit-Default` |
+| Background tiles (no 2D Lights) | `Universal Render Pipeline/2D/Sprite-Unlit-Default` |
+| Nebula tint masks | Custom Shader Graph: greyscale mask × `_Color` → alpha-premultiplied output. Runtime tint via `SpriteRenderer.color` |
+| Post-process / screen effects | URP Render Graph `ScriptableRendererFeature` implementing `RecordRenderGraph()` |
+
+**Max 10 unique materials per gameplay scene.** All sprites in the same atlas share one material instance. Per-instance hit-flash or tint overrides use `MaterialPropertyBlock` — do not create duplicate material instances for per-enemy overrides.
+
+> **Unity 6.4 breaking change**: `RenderGraphSettings.enableRenderCompatibilityMode` is permanently `false`. Any `ScriptableRendererFeature` using the old `Execute()` override will not function. All custom render passes must implement `RecordRenderGraph()`. Validate all post-process effects before milestone builds.
+
+---
+
+### 8.7 Animation Import
+
+**Animation system**: Animator Controller (Mecanim) with sprite-swap animation clips. The Legacy `Animation` component is forbidden.
+
+| Setting | Required value |
+|---|---|
+| Sprite Mode on source texture | `Multiple` — slice via Sprite Editor using `Grid By Cell Size` at the sprite's native resolution |
+| Gameplay clip frame rate | **12fps** (standard pixel-art frame rate) |
+| Cutscene clip frame rate | **24fps** |
+| Clip naming | `[SpriteName]_[StateName]` — e.g., `PlayerShip_Idle`, `DroneEnemy_Move` |
+| Loop Time | Enabled for idle/movement; Disabled for one-shot clips (death, spawn, sacrifice) |
+| Animator Culling Mode | `Cull Completely` on all off-screen gameplay sprites |
+
+Do not animate `Transform.localScale` per-frame for visual effects — use a shader property or particle system instead. Scale keyframes break sprite batching.
+
+---
+
+### 8.8 Tilemap Constraints
+
+| Setting | Required value |
+|---|---|
+| Tilemap Renderer Mode | `Chunk` — batches entire chunk into one draw call (not `Individual` mode) |
+| Grid Cell Size | `(512, 512, 0)` world units, matching PPU=1 and 512px tile size |
+| Sorting Layers (4 dedicated) | `BG_Layer0` (farthest) through `BG_Layer3` (nearest background) — defined below `Default` in Sorting Layers |
+| Tile Collider Type | `None` on all background tiles |
+| Tile Wrap Mode | `Repeat` — required for seamless scroll |
+
+**Parallax scrolling implementation**: Move the Tilemap GameObject's position, not UV offset. UV offset scrolling requires a custom material and breaks Tilemap chunk batching.
+
+---
+
+### 8.9 Export Settings and Palette Validation
+
+**Palette validation is the single most important export gate.** Any pixel outside the approved 9-color palette is a blocking error. Export pipeline steps:
+
+1. In Aseprite: `File > Export As` → PNG, no scaling, no color profile embedding.
+2. Before export: run Aseprite's palette validation (restrict palette to the 9 approved colors). Any non-palette pixel = stop and fix.
+3. Export at **1× scale** (native pixel resolution). No anti-aliasing on export.
+4. Verify in a separate image viewer that no sub-pixel blending was introduced. A correct pixel-art export has exactly the colors present in the palette — no intermediate values.
+
+**Portrait export standards**: 128×160px canvas, RGB color mode (not indexed). The ghost/echo portrait variant (for confrontation reveal context) must not contain Gold (#ffd700) or Red (#ff4040) — these semantic colors are reserved for gameplay events and must not appear on a portrait intended to read as spectral or absent.
+
+**Failure modes to verify on every export:**
+- Resampling at export (produces anti-aliased edges) — check canvas scaling is 1×
+- ICC color profile mismatch (produces shifted colors in Unity) — export with no embedded profile
+- Palette contamination (colors outside the 9-palette appearing at transparent boundaries) — verify with Point-filter preview in Unity immediately after import
 
 ---
 
